@@ -20,7 +20,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <memory.h>
-#include "aseWriter.h"
+#include "AseWriter.h"
 
 int loadGimpPalette(char *filename, paletteT *palette)
 {
@@ -39,7 +39,12 @@ int loadGimpPalette(char *filename, paletteT *palette)
         exit(1);
     }
     // read the first line from the file
-    fgets(chunk, sizeof(chunk), fp);
+    if (fgets(chunk, sizeof(chunk), fp) == NULL) {
+        printf("Error: Unable to read from file '%s'.\n", filename);
+        fclose(fp);
+        exit(1);
+    }
+
 
     // check if it's a GIMP palette file
     if(strncmp(chunk,"GIMP Palette",sizeof(char)*12)!=0){
@@ -113,7 +118,7 @@ void addAseFileEndingIfMmissing(char *filename, char *newFilename)
         // calculate the starting position for the file name ending
         fileNameEndingPosition = fileNamelength-4;
         // copy the last four characters in the file name to the fileNameEnding string
-        sprintf(fileNameEnding,filename+fileNameEndingPosition);
+        strcpy(fileNameEnding, filename + fileNameEndingPosition);
 
         // if the file name does not end with ".ase"
         if(strcmp(fileNameEnding,".ase") != 0 && strcmp(fileNameEnding,".ASE") != 0){
@@ -131,10 +136,12 @@ void addAseFileEndingIfMmissing(char *filename, char *newFilename)
 void printProgramInfo(int tooFewParameters){
 
     #ifdef __linux__
-    system("clear");        // linux terminal uses clear
+    if (system("clear") == -1) { // linux terminal uses clear
     #elif _WIN32
-    system("cls");          // windows cmd uses "cls"
+    if (system("cls") == -1)   { // windows cmd uses "cls"
     #endif
+        perror("system");
+    }
 
     printf("*********************************************\n");
     printf("*  GPL2ASE Version 1.0                      *\n");
